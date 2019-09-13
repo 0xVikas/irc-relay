@@ -12,7 +12,7 @@ from twisted.cred import portal
 class ircServerProtocol(IRC, protocol.Protocol):
     def __init__(self):
         self.mainserver = None
-        self.buffer = ""
+        self.buffer = b""
         self.client = None
         self.factory = None
 
@@ -22,30 +22,30 @@ class ircServerProtocol(IRC, protocol.Protocol):
         self.factory.server = self
 
         if self.mainserver == None:
-            get_site = "Welcome!\nIRC Proxy - Made by Vikas\nEnter the IRC network address to connect :\nEx: /join irc.freenode.net\n\n"
+            get_site = b"Welcome!\nIRC Proxy - Made by Vikas\nEnter the IRC network address to connect :\nEx: /join irc.freenode.net\n\n"
             self.transport.write(get_site)
 
     def dataReceived(self, data):
         if (self.client != None and self.mainserver != None):
             self.client.write(data)
-        if self.mainserver == None and ("JOIN" in data or "join" in data):
-            p = data.find("JOIN")
+        if self.mainserver == None and (b"JOIN" in data or b"join" in data):
+            p = data.find(b"JOIN")
             self.mainserver = data[p+5:len(data)-2]
-            print "Server set to : " + self.mainserver
+            print(b"Server set to : " + self.mainserver)
             reactor.connectTCP(self.mainserver, 6667, self.factory)
 
-        if self.mainserver == None and ("JOIN" not in data or "join" not in data):
-            print "Adding to buffer: " + data
+        if self.mainserver == None and (b"JOIN" not in data or b"join" not in data):
+            print("Adding to buffer: " + str(data))
             self.buffer += data
 
     def write(self, data):
-        print "Data recieved from server: " + data
+        print("Data recieved from server: " + str(data))
         self.transport.write(data)
 
 class ClientProtocol(protocol.Protocol):
     def connectionMade(self):
         self.factory.server.client = self
-        print "writing to server : " + self.factory.server.buffer
+        print("writing to server : " + str(self.factory.server.buffer))
         self.write(self.factory.server.buffer)
         self.factory.server.buffer = ''
 
@@ -53,7 +53,7 @@ class ClientProtocol(protocol.Protocol):
         self.factory.server.write(data)
 
     def write(self, data):
-        print "Sending data as proxy: " + data
+        print("Sending data as proxy: " + str(data))
         self.transport.write(data)
 
 wordsRealm = service.InMemoryWordsRealm(None)
